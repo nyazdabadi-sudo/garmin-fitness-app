@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, NavLink } from 'react-router-dom'
-import { Activity, Home as HomeIcon, BarChart3, LogOut, Menu, X } from 'lucide-react'
+import { Activity, Home as HomeIcon, BarChart3, LogOut, Menu, X, Snowflake } from 'lucide-react'
 import Home from './pages/Home'
 import Activities from './pages/Activities'
 import Insights from './pages/Insights'
+import YetiFruit from './pages/YetiFruit'
 import Login from './components/Login'
 import { checkAuthStatus, logout } from './services/api'
 
@@ -89,6 +90,15 @@ function App() {
                 <BarChart3 className="w-4 h-4" />
                 Insights
               </NavLink>
+              <NavLink
+                to="/yeti-fruit"
+                className={({ isActive }) =>
+                  `nav-link flex items-center gap-2 ${isActive ? 'nav-link-active' : ''}`
+                }
+              >
+                <Snowflake className="w-4 h-4" />
+                Yeti Fruit
+              </NavLink>
               <button
                 onClick={handleLogout}
                 className="nav-link flex items-center gap-2 text-garmin-danger hover:text-red-400"
@@ -141,6 +151,16 @@ function App() {
               <BarChart3 className="w-4 h-4" />
               Insights
             </NavLink>
+            <NavLink
+              to="/yeti-fruit"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `nav-link flex items-center gap-2 w-full ${isActive ? 'nav-link-active' : ''}`
+              }
+            >
+              <Snowflake className="w-4 h-4" />
+              Yeti Fruit
+            </NavLink>
             <button
               onClick={() => {
                 handleLogout()
@@ -161,6 +181,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/activities" element={<Activities />} />
           <Route path="/insights" element={<Insights />} />
+          <Route path="/yeti-fruit" element={<YetiFruit />} />
         </Routes>
       </main>
     </div>
