@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, NavLink } from 'react-router-dom'
+import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import { Activity, Home as HomeIcon, BarChart3, LogOut, Menu, X, Snowflake } from 'lucide-react'
 import Home from './pages/Home'
 import Activities from './pages/Activities'
@@ -12,6 +12,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const location = useLocation()
 
   useEffect(() => {
     checkAuth()
@@ -45,7 +46,8 @@ function App() {
     )
   }
 
-  if (!isAuthenticated) {
+  // Allow Yeti Fruit game without authentication
+  if (!isAuthenticated && location.pathname !== '/yeti-fruit') {
     return <Login onLogin={handleLogin} />
   }
 
