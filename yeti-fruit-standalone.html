@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeti Fruit - Blox Fruits</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin: 20px 0;
+            color: #00BFFF;
+            text-shadow: 0 0 20px #00BFFF;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #87CEEB;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            border: 4px solid #00BFFF;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 191, 255, 0.5);
+            background: #0a0a1a;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .ability-card {
+            background: rgba(0, 191, 255, 0.1);
+            border: 2px solid #00BFFF;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .ability-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 191, 255, 0.3);
+        }
+
+        .ability-card.on-cooldown {
+            border-color: #FFA500;
+            opacity: 0.7;
+        }
+
+        .ability-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ability-key {
+            background: #00BFFF;
+            color: #0a0a1a;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+
+        .ability-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #00BFFF;
+        }
+
+        .ability-stats {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #87CEEB;
+        }
+
+        .cooldown-bar {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .cooldown-progress {
+            background: linear-gradient(90deg, #FFA500, #FFD700);
+            height: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: 2px solid #00BFFF;
+            z-index: 1000;
+            display: none;
+        }
+
+        .instructions {
+            background: rgba(0, 191, 255, 0.1);
+            border: 2px solid #00BFFF;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            color: #00BFFF;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            margin: 5px 0;
+            color: #87CEEB;
+        }
+    </style>
+</head>
+<body>
+    <div id="message" class="message"></div>
+
+    <div class="container">
+        <h1>❄️ Yeti Fruit (Yeti Yeti no Mi)</h1>
+        <p class="subtitle">Beast Type Fruit - All Moves Unlocked</p>
+
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div class="controls-grid">
+            <div class="ability-card" id="ability-z">
+                <div class="ability-header">
+                    <div class="ability-name">Yeti Punch</div>
+                    <div class="ability-key">Z</div>
+                </div>
+                <p style="color: #ccc; font-size: 0.9em;">Powerful ice-cold punch</p>
+                <div class="ability-stats">
+                    <p>💥 Damage: 2,800</p>
+                    <p>⏱️ Cooldown: 8s</p>
+                    <p>📏 Range: Close</p>
+                </div>
+                <div class="cooldown-bar"><div class="cooldown-progress" id="cooldown-z"></div></div>
+            </div>
+
+            <div class="ability-card" id="ability-x">
+                <div class="ability-header">
+                    <div class="ability-name">Yeti Roar</div>
+                    <div class="ability-key">X</div>
+                </div>
+                <p style="color: #ccc; font-size: 0.9em;">Devastating roar with stun</p>
+                <div class="ability-stats">
+                    <p>💥 Damage: 3,300 (AOE)</p>
+                    <p>⏱️ Cooldown: 12s</p>
+                    <p>💫 Stun: 2s</p>
+                </div>
+                <div class="cooldown-bar"><div class="cooldown-progress" id="cooldown-x"></div></div>
+            </div>
+
+            <div class="ability-card" id="ability-c">
+                <div class="ability-header">
+                    <div class="ability-name">Yeti Stomp</div>
+                    <div class="ability-key">C</div>
+                </div>
+                <p style="color: #ccc; font-size: 0.9em;">Ground pound ice shockwave</p>
+                <div class="ability-stats">
+                    <p>💥 Damage: 3,800 (AOE)</p>
+                    <p>⏱️ Cooldown: 15s</p>
+                    <p>📏 Range: Large</p>
+                </div>
+                <div class="cooldown-bar"><div class="cooldown-progress" id="cooldown-c"></div></div>
+            </div>
+
+            <div class="ability-card" id="ability-v">
+                <div class="ability-header">
+                    <div class="ability-name">Yeti Transform</div>
+                    <div class="ability-key">V</div>
+                </div>
+                <p style="color: #ccc; font-size: 0.9em;">Transform into massive Yeti</p>
+                <div class="ability-stats">
+                    <p>⚡ Damage Boost: +50%</p>
+                    <p>⏱️ Duration: 15s</p>
+                    <p>⏱️ Cooldown: 25s</p>
+                </div>
+                <div class="cooldown-bar"><div class="cooldown-progress" id="cooldown-v"></div></div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>🎮 Controls</h3>
+            <p><strong>Movement:</strong> WASD or Arrow Keys</p>
+            <p><strong>Abilities:</strong> Press Z, X, C, or V keys</p>
+            <p><strong>Pro Tip:</strong> Use V first to transform, then unleash X and C for maximum damage!</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageEl = document.getElementById('message');
+
+        // Game state
+        const game = {
+            player: {
+                x: 400,
+                y: 300,
+                health: 10000,
+                maxHealth: 10000,
+                isTransformed: false,
+                transformTimeLeft: 0
+            },
+            enemies: [],
+            particles: [],
+            cooldowns: { z: 0, x: 0, c: 0, v: 0 },
+            keys: {},
+            lastTime: Date.now()
+        };
+
+        // Yeti Fruit moves
+        const MOVES = {
+            z: { name: 'Yeti Punch', damage: 2800, cooldown: 8, color: '#87CEEB', particles: 20 },
+            x: { name: 'Yeti Roar', damage: 3300, cooldown: 12, color: '#4682B4', particles: 40, radius: 200, stun: 2000 },
+            c: { name: 'Yeti Stomp', damage: 3800, cooldown: 15, color: '#1E90FF', particles: 50, radius: 250 },
+            v: { name: 'Yeti Transform', cooldown: 25, color: '#00BFFF', particles: 60, duration: 15, boost: 1.5 }
+        };
+
+        // Initialize enemies
+        for (let i = 0; i < 5; i++) {
+            game.enemies.push({
+                id: i,
+                x: Math.random() * 700 + 50,
+                y: Math.random() * 500 + 50,
+                health: 5000,
+                maxHealth: 5000,
+                stunned: false,
+                stunnedUntil: 0
+            });
+        }
+
+        // Show message
+        function showMessage(text) {
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+            setTimeout(() => messageEl.style.display = 'none', 2000);
+        }
+
+        // Create particles
+        function createParticles(x, y, count, color) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 3 + 1;
+                game.particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 4 + 2,
+                    color,
+                    life: 1,
+                    maxLife: 1,
+                    alpha: 1
+                });
+            }
+        }
+
+        // Use abilities
+        function useAbility(key) {
+            if (game.cooldowns[key] > 0) {
+                showMessage(`${MOVES[key].name} on cooldown: ${game.cooldowns[key].toFixed(1)}s`);
+                return;
+            }
+
+            const move = MOVES[key];
+            const boost = game.player.isTransformed && MOVES.v.boost ? MOVES.v.boost : 1;
+
+            if (key === 'z') {
+                let closest = null;
+                let minDist = Infinity;
+                game.enemies.forEach(e => {
+                    const dist = Math.hypot(e.x - game.player.x, e.y - game.player.y);
+                    if (dist < minDist && dist < 150) {
+                        minDist = dist;
+                        closest = e;
+                    }
+                });
+                if (closest) {
+                    closest.health = Math.max(0, closest.health - move.damage * boost);
+                    createParticles(closest.x, closest.y, move.particles, move.color);
+                    showMessage(`${move.name}! ${Math.round(move.damage * boost)} damage!`);
+                    game.cooldowns[key] = move.cooldown;
+                } else {
+                    showMessage('No enemy in range!');
+                }
+            } else if (key === 'x' || key === 'c') {
+                let hitCount = 0;
+                const now = Date.now();
+                game.enemies.forEach(e => {
+                    const dist = Math.hypot(e.x - game.player.x, e.y - game.player.y);
+                    if (dist < move.radius) {
+                        e.health = Math.max(0, e.health - move.damage * boost);
+                        if (move.stun) {
+                            e.stunned = true;
+                            e.stunnedUntil = now + move.stun;
+                        }
+                        hitCount++;
+                    }
+                });
+                createParticles(game.player.x, game.player.y, move.particles, move.color);
+                showMessage(`${move.name}! Hit ${hitCount} enemies for ${Math.round(move.damage * boost)} each!`);
+                game.cooldowns[key] = move.cooldown;
+            } else if (key === 'v') {
+                if (game.player.isTransformed) {
+                    showMessage('Already transformed!');
+                    return;
+                }
+                game.player.isTransformed = true;
+                game.player.transformTimeLeft = move.duration;
+                createParticles(game.player.x, game.player.y, move.particles, move.color);
+                showMessage(`${move.name}! +50% damage for ${move.duration}s!`);
+                game.cooldowns[key] = move.cooldown;
+            }
+        }
+
+        // Update cooldown UI
+        function updateCooldownUI() {
+            ['z', 'x', 'c', 'v'].forEach(key => {
+                const progress = document.getElementById(`cooldown-${key}`);
+                const card = document.getElementById(`ability-${key}`);
+                const cd = game.cooldowns[key];
+                if (cd > 0) {
+                    const percent = (1 - cd / MOVES[key].cooldown) * 100;
+                    progress.style.width = percent + '%';
+                    card.classList.add('on-cooldown');
+                } else {
+                    progress.style.width = '0%';
+                    card.classList.remove('on-cooldown');
+                }
+            });
+        }
+
+        // Draw player
+        function drawPlayer() {
+            const px = game.player.x;
+            const py = game.player.y;
+            const time = Date.now() / 1000;
+
+            if (game.player.isTransformed) {
+                const bodySize = 40;
+                const breathe = Math.sin(time * 2) * 2;
+
+                // Aura
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = '#00BFFF';
+                ctx.beginPath();
+                ctx.arc(px, py, bodySize + 15 + Math.sin(time * 3) * 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                // Body
+                ctx.fillStyle = '#E0F7FF';
+                ctx.strokeStyle = '#00BFFF';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(px, py, bodySize + breathe, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Eyes
+                ctx.fillStyle = '#00FFFF';
+                ctx.shadowColor = '#00FFFF';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(px - 12, py - 8, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(px + 12, py - 8, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            } else {
+                const bodySize = 20;
+                ctx.fillStyle = '#3498db';
+                ctx.strokeStyle = '#2980b9';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(px, py, bodySize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // Health bar
+            const barWidth = 100;
+            const barHeight = 8;
+            const healthPercent = game.player.health / game.player.maxHealth;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(px - barWidth / 2, py - 50, barWidth, barHeight);
+            ctx.fillStyle = '#2ecc71';
+            ctx.fillRect(px - barWidth / 2, py - 50, barWidth * healthPercent, barHeight);
+
+            // Transform timer
+            if (game.player.isTransformed) {
+                ctx.fillStyle = '#00BFFF';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`YETI FORM: ${game.player.transformTimeLeft.toFixed(1)}s`, px, py - 60);
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            const now = Date.now();
+            const dt = (now - game.lastTime) / 1000;
+            game.lastTime = now;
+
+            // Update cooldowns
+            Object.keys(game.cooldowns).forEach(key => {
+                if (game.cooldowns[key] > 0) {
+                    game.cooldowns[key] = Math.max(0, game.cooldowns[key] - dt);
+                }
+            });
+
+            // Update transform
+            if (game.player.isTransformed) {
+                game.player.transformTimeLeft -= dt;
+                if (game.player.transformTimeLeft <= 0) {
+                    game.player.isTransformed = false;
+                    showMessage('Transformation ended!');
+                }
+            }
+
+            // Update particles
+            game.particles = game.particles.map(p => ({
+                ...p,
+                x: p.x + p.vx,
+                y: p.y + p.vy,
+                life: p.life - dt,
+                alpha: Math.max(0, p.life / p.maxLife)
+            })).filter(p => p.life > 0);
+
+            // Update enemies
+            game.enemies.forEach(e => {
+                e.stunned = now < e.stunnedUntil;
+            });
+
+            // Move player
+            const speed = 5;
+            if (game.keys['arrowleft'] || game.keys['a']) game.player.x -= speed;
+            if (game.keys['arrowright'] || game.keys['d']) game.player.x += speed;
+            if (game.keys['arrowup'] || game.keys['w']) game.player.y -= speed;
+            if (game.keys['arrowdown'] || game.keys['s']) game.player.y += speed;
+            game.player.x = Math.max(30, Math.min(770, game.player.x));
+            game.player.y = Math.max(30, Math.min(570, game.player.y));
+
+            // Respawn enemies
+            if (game.enemies.every(e => e.health <= 0)) {
+                setTimeout(() => {
+                    game.enemies = [];
+                    for (let i = 0; i < 5; i++) {
+                        game.enemies.push({
+                            id: Date.now() + i,
+                            x: Math.random() * 700 + 50,
+                            y: Math.random() * 500 + 50,
+                            health: 5000,
+                            maxHealth: 5000,
+                            stunned: false,
+                            stunnedUntil: 0
+                        });
+                    }
+                    showMessage('New wave of enemies!');
+                }, 2000);
+            }
+
+            // Draw
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid
+            ctx.strokeStyle = '#2a2a3e';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // Particles
+            game.particles.forEach(p => {
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // Enemies
+            game.enemies.forEach(e => {
+                ctx.fillStyle = e.stunned ? '#666' : '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, 20, 0, Math.PI * 2);
+                ctx.fill();
+
+                const barWidth = 40;
+                const barHeight = 5;
+                const healthPercent = e.health / e.maxHealth;
+                ctx.fillStyle = '#333';
+                ctx.fillRect(e.x - barWidth / 2, e.y - 35, barWidth, barHeight);
+                ctx.fillStyle = e.health > e.maxHealth * 0.3 ? '#2ecc71' : '#e74c3c';
+                ctx.fillRect(e.x - barWidth / 2, e.y - 35, barWidth * healthPercent, barHeight);
+
+                if (e.stunned) {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '20px Arial';
+                    ctx.fillText('⭐', e.x - 10, e.y - 40);
+                }
+            });
+
+            drawPlayer();
+            updateCooldownUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Input
+        window.addEventListener('keydown', e => {
+            game.keys[e.key.toLowerCase()] = true;
+            const key = e.key.toLowerCase();
+            if (['z', 'x', 'c', 'v'].includes(key)) {
+                e.preventDefault();
+                useAbility(key);
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            game.keys[e.key.toLowerCase()] = false;
+        });
+
+        // Start
+        showMessage('Yeti Fruit Loaded! Press V to transform!');
+        gameLoop();
+    </script>
+</body>
+</html>
